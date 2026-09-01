@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#111827">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Divine Branding">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Divine Branding Manager</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;background:#f5f6f8;color:#111827}
+header{background:#111827;color:white;padding:20px 18px calc(18px + env(safe-area-inset-top));position:sticky;top:0;z-index:5}
+header h1{margin:0;font-size:22px}header p{margin:4px 0 0;color:#cbd5e1;font-size:13px}
+.wrap{max-width:1000px;margin:auto;padding:16px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px}.stat{background:white;border-radius:14px;padding:13px;box-shadow:0 1px 4px #00000012}.stat b{display:block;font-size:22px}.stat span{font-size:11px;color:#64748b}
+.toolbar{display:flex;gap:9px;flex-wrap:wrap;margin-bottom:12px}.toolbar input,.toolbar select{flex:1;min-width:150px;padding:12px;border:1px solid #d1d5db;border-radius:11px;background:white;font-size:15px}
+button{border:0;border-radius:11px;padding:11px 14px;font-weight:600;font-size:14px;cursor:pointer}.primary{background:#111827;color:white}.secondary{background:white;border:1px solid #d1d5db}
+.list{display:grid;gap:10px}.card{background:white;border-radius:15px;padding:15px;box-shadow:0 1px 5px #00000012}.top{display:flex;justify-content:space-between;gap:10px}.name{font-weight:750;font-size:17px}.meta{color:#64748b;font-size:13px;margin-top:4px}.pill{font-size:11px;padding:5px 8px;border-radius:999px;background:#eef2ff;white-space:nowrap;height:max-content}.pill.done{background:#dcfce7}.pill.progress{background:#fef3c7}.pill.print{background:#e0e7ff}.pill.design{background:#f3e8ff}.details{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:12px;font-size:13px}.details div{background:#f8fafc;padding:9px;border-radius:9px}.details small{display:block;color:#64748b;margin-bottom:2px}.actions{display:flex;gap:8px;margin-top:12px}.empty{text-align:center;color:#64748b;padding:40px}
+dialog{border:0;border-radius:18px;width:min(94vw,560px);padding:0;box-shadow:0 20px 70px #0005}dialog::backdrop{background:#0007}.modal{padding:20px}.modal h2{margin:0 0 15px}.form{display:grid;gap:11px}.form label{font-size:12px;font-weight:650;color:#475569}.form input,.form select,.form textarea{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:10px;font-size:15px}.form textarea{min-height:90px;resize:vertical}.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+@media(max-width:650px){.stats{grid-template-columns:repeat(2,1fr)}.details{grid-template-columns:1fr}.wrap{padding:12px}.toolbar input{min-width:100%}}
+</style>
+</head>
+<body>
+<header><h1>Divine Branding</h1><p>Client & job manager</p></header>
+<main class="wrap">
+<section class="stats">
+<div class="stat"><b id="total">0</b><span>TOTAL CLIENTS</span></div>
+<div class="stat"><b id="active">0</b><span>IN PROGRESS</span></div>
+<div class="stat"><b id="done">0</b><span>COMPLETED</span></div>
+<div class="stat"><b id="printing">0</b><span>PRINTING</span></div>
+</section>
+<div class="toolbar">
+<input id="search" placeholder="Search clients...">
+<select id="filter"><option value="">All statuses</option><option>Start Printing</option><option>In Progress</option><option>Done</option><option>Create Design</option></select>
+<button class="primary" onclick="openAdd()">＋ Add Client</button>
+<button class="secondary" onclick="exportData()">Export</button>
+<button class="secondary" onclick="document.getElementById('file').click()">Import</button>
+<input id="file" type="file" accept=".json" hidden onchange="importData(event)">
+</div>
+<div id="list" class="list"></div>
+</main>
+
+<dialog id="dlg"><div class="modal">
+<h2 id="modalTitle">Add Client</h2>
+<form class="form" id="form">
+<input type="hidden" id="editIndex">
+<div><label>CLIENT / COMPANY</label><input id="client" required></div>
+<div class="row"><div><label>CATEGORY</label><select id="category"><option>Van</option><option>Truck</option><option>Box Truck</option><option>Trailer</option><option>Other</option></select></div>
+<div><label>STATUS</label><select id="status"><option>Start Printing</option><option>In Progress</option><option>Done</option><option>Create Design</option></select></div></div>
+<div class="row"><div><label>DUE DATE</label><input id="due"></div><div><label>PAYMENT</label><input id="payment" placeholder="Paid, $400, Deposit..."></div></div>
+<div><label>NOTES</label><textarea id="notes"></textarea></div>
+<div class="modal-actions"><button type="button" class="secondary" onclick="dlg.close()">Cancel</button><button class="primary">Save Client</button></div>
+</form></div></dialog>
+
+<script>
+const starter = [{"client":"Vlad (FB)","category":"Van","status":"Done","due":"Saturday","payment":"Design Ready","notes":""},{"client":"SIG Mechanical","category":"Box Truck","status":"In Progress","due":"Next Week","payment":"","notes":""},{"client":"Yaro Remodel","category":"Truck","status":"Done","due":"Monday","payment":"","notes":""},{"client":"Pedro (FB)","category":"Truck","status":"In Progress","due":"","payment":"","notes":""},{"client":"Pacific Towing","category":"Truck","status":"Done","due":"","payment":"","notes":""},{"client":"Dennis Pinacle","category":"Truck","status":"Done","due":"Tuesday (maybe)","payment":"","notes":""},{"client":"Seattle Paint (FB)","category":"Van","status":"In Progress","due":"","payment":"","notes":""},{"client":"Edgar (FB)","category":"Van","status":"Done","due":"Wednesday","payment":"","notes":""},{"client":"Shane Movers","category":"Box Truck","status":"In Progress","due":"Sept. 1","payment":"","notes":""},{"client":"SkyRoofing","category":"Truck","status":"Start Printing","due":"","payment":"","notes":""},{"client":"Santos","category":"Truck","status":"Done","due":"Tuesday","payment":"","notes":""},{"client":"TrueTemp","category":"Van","status":"Done","due":"Thursday","payment":"","notes":""},{"client":"Mike Paint","category":"Van","status":"Start Printing","due":"Friday","payment":"","notes":""},{"client":"Santos","category":"Truck","status":"Done","due":"","payment":"","notes":""}];
+let clients = JSON.parse(localStorage.getItem("divineClients") || "null") || starter;
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem("divineClients",JSON.stringify(clients));render()}
+function cls(s){return s==="Done"?"done":s==="In Progress"?"progress":s==="Start Printing"?"print":"design"}
+function render(){
+ const q=$("search").value.toLowerCase().trim(), f=$("filter").value;
+ const shown=clients.map((x,i)=>({...x,i})).filter(x=>(!q||JSON.stringify(x).toLowerCase().includes(q))&&(!f||x.status===f));
+ $("total").textContent=clients.length;
+ $("active").textContent=clients.filter(x=>x.status==="In Progress").length;
+ $("done").textContent=clients.filter(x=>x.status==="Done").length;
+ $("printing").textContent=clients.filter(x=>x.status==="Start Printing").length;
+ $("list").innerHTML=shown.length?shown.map(x=>`
+ <article class="card">
+  <div class="top"><div><div class="name">${esc(x.client)}</div><div class="meta">${esc(x.category||"No category")}</div></div><span class="pill ${cls(x.status)}">${esc(x.status||"No status")}</span></div>
+  <div class="details">
+   <div><small>Due</small>${esc(x.due||"—")}</div><div><small>Payment</small>${esc(x.payment||"—")}</div>
+   <div style="grid-column:1/-1"><small>Notes</small>${esc(x.notes||"—")}</div>
+  </div>
+  <div class="actions"><button class="secondary" onclick="edit(${x.i})">Edit</button><button class="secondary" onclick="removeClient(${x.i})">Delete</button></div>
+ </article>`).join(""):`<div class="empty">No clients found.</div>`;
+}
+function esc(v){return String(v??"").replace(/[&<>"']/g,m=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#039;"}[m]))}
+function openAdd(){ $("modalTitle").textContent="Add Client"; $("editIndex").value=""; $("form").reset(); $("category").value="Van"; $("status").value="In Progress"; $("dlg").showModal()}
+function edit(i){const x=clients[i];$("modalTitle").textContent="Edit Client";$("editIndex").value=i;$("client").value=x.client;$("category").value=x.category||"Other";$("status").value=x.status||"In Progress";$("due").value=x.due||"";$("payment").value=x.payment||"";$("notes").value=x.notes||"";$("dlg").showModal()}
+$("form").addEventListener("submit",e=>{e.preventDefault();const x={client:$("client").value.trim(),category:$("category").value,status:$("status").value,due:$("due").value.trim(),payment:$("payment").value.trim(),notes:$("notes").value.trim()};const i=$("editIndex").value;if(i==="")clients.push(x);else clients[+i]=x;$("dlg").close();save()});
+function removeClient(i){if(confirm("Delete this client?")){clients.splice(i,1);save()}}
+$("search").oninput=render;$("filter").onchange=render;
+function exportData(){const blob=new Blob([JSON.stringify(clients,null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="divine-branding-backup.json";a.click();URL.revokeObjectURL(a.href)}
+function importData(e){const file=e.target.files[0];if(!file)return;const r=new FileReader();r.onload=()=>{try{const d=JSON.parse(r.result);if(!Array.isArray(d))throw 0;clients=d;save();alert("Imported successfully.");}catch{alert("That file is not a valid Divine Branding backup.")}e.target.value=""};r.readAsText(file)}
+if("serviceWorker" in navigator) window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+render();
+</script>
+</body></html>
